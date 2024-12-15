@@ -6,7 +6,7 @@ const db = require("./db");
 //http://localhost:4000/menu/
 router.get("/", async (req, res) => {
   try {
-    const response = await db.promise(`SELECT * FROM campuseats.menu`);
+    const response = await db.promise().query(`SELECT * FROM campuseats.menu`);
     res.status(200).json(response[0]);
   } catch (e) {
     res.status(400).json(e);
@@ -25,17 +25,31 @@ router.post("/post-menu", async (req, res) => {
     availability,
     created_at,
   } = req.body;
+
   try {
+    // Use parameterized queries to prevent SQL injection
     const result = await db
       .promise()
       .query(
-        `INSERT INTO campuseats.menu (vendor_id,name, description, price, category,image_url,availability,created_at) VALUES (${vendor_id},${name},${description},${price},${category},${image_url},${availability},${created_at})`
+        `INSERT INTO campuseats.menu (vendor_id, name, description, price, category, image_url, availability, created_at) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          vendor_id,
+          name,
+          description,
+          price,
+          category,
+          image_url,
+          availability,
+          created_at,
+        ]
       );
     res.status(201).json({ message: "Snack added successfully!" });
   } catch (e) {
-    res.status(400).json(e);
+    res.status(400).json({ error: e.message });
   }
 });
+
 ////http://localhost:4000/menu/update-menu:id=1
 router.put("/update-menu:id", async (req, res) => {
   const { id } = req.params;
@@ -83,19 +97,19 @@ router.delete("/delete-menu:id", async (req, res) => {
 //http://localhost:4000/menu/search-menu?name=pizza
 ////http://localhost:4000/menu/search-menu?category=snacks
 router.get("/search-menu", async (req, res) => {
-  const { name, category } = req.query; 
+  const { name, category } = req.query;
 
   try {
-    let query = `SELECT * FROM menu WHERE 1=1`;
+    let query = "SELECT * FROM menu WHERE 1=1"; // Start with a true condition
     const params = [];
 
     if (name) {
-      query += ` AND name LIKE ?`;
-      params.push(`%${name}%`); 
+      query += " AND name LIKE ?";
+      params.push(`%${name}%`);
     }
 
     if (category) {
-      query += ` AND category = ?`;
+      query += " AND category = ?";
       params.push(category);
     }
 

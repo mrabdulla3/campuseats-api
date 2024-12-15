@@ -56,7 +56,7 @@ router.delete("/remove-item:id", async (req, res) => {
       .promise()
       .query(`DELETE FROM campuseats.order_items WHERE id=${id}`);
     res.status(200).json({
-      message: "Item added to cart successfully",
+      message: "Item deleted successfully",
     });
   } catch (e) {
     res.status(400).json(e);

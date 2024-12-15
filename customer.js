@@ -45,7 +45,7 @@ router.post("/login", async (req, res) => {
     // Check in customers table
     const [customer] = await db
       .promise()
-      .query("SELECT * FROM customers WHERE email = ?", [email]);
+      .query("SELECT * FROM campuseats.users WHERE email = ?", [email]);
     if (customer.length > 0) {
       user = customer[0];
     }
@@ -127,9 +127,9 @@ router.delete("/customer-profile-delete:id", async (req, res) => {
     const [response] = await db
       .promise()
       .query(`DELETE FROM campuseats.users WHERE id=${id}`);
-      if (response.affectedRows === 0) {
-        return res.status(404).json({ message: "Customer profile not found" });
-      }
+    if (response.affectedRows === 0) {
+      return res.status(404).json({ message: "Customer profile not found" });
+    }
     res.status(200).json({
       message: "Customer profile deleted successfully",
     });
