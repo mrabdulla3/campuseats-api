@@ -5,7 +5,7 @@ const db=require('./db');
 //http://localhost:4000/orders/
 router.get('/', async(req, res) => {
     try{
-        const response=await db.promise().query('SELECT * FROM campuseats.orders');
+        const response=await db.promise().query('SELECT * FROM orders');
         res.status(200).json(response[0]);
     }catch(e){
         res.status(400).json(e);
