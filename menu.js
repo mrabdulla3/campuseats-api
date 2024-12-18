@@ -12,6 +12,17 @@ router.get("/", async (req, res) => {
     res.status(400).json(e);
   }
 });
+//Restaurent Menu
+//http://localhost:4000/menu/vendorId
+router.get("/:id", async (req, res) => {
+  const {id}=req.params;
+  try {
+    const response = await db.promise().query(`SELECT *FROM menu WHERE vendor_id=${id}`);
+    res.status(200).json(response[0]);
+  } catch (e) {
+    res.status(400).json(e);
+  }
+});
 //post menu
 ////http://localhost:4000/menu/post-menu
 router.post("/post-menu", async (req, res) => {
@@ -48,10 +59,11 @@ router.post("/post-menu", async (req, res) => {
   }
 });
 
-////http://localhost:4000/menu/update-menu:id=1
-router.put("/update-menu:id", async (req, res) => {
+////http://localhost:4000/menu/update-menu/:id=1
+router.put("/update-menu/:id", async (req, res) => {
   const { id } = req.params;
-  const { name, description, price, category, image_url } = req.body;
+  const { name, description, price, category, image_url, availability } = req.body;
+
   try {
     const query = `
       UPDATE menu 
@@ -61,7 +73,9 @@ router.put("/update-menu:id", async (req, res) => {
         price = ?, 
         category = ?, 
         image_url = ?, 
+        availability = ?
       WHERE id = ?`;
+
     const [response] = await db
       .promise()
       .query(query, [
@@ -73,13 +87,16 @@ router.put("/update-menu:id", async (req, res) => {
         availability,
         id,
       ]);
+
     res.status(200).json({ message: "Menu item updated successfully" });
   } catch (e) {
+    console.error(e);
     res.status(500).json({ error: "Failed to update menu item" });
   }
 });
-////http://localhost:4000/menu/delete-menu:id=
-router.delete("/delete-menu:id", async (req, res) => {
+
+////http://localhost:4000/menu/delete-menu/:id=
+router.delete("/delete-menu/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const response = await db
