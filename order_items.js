@@ -8,7 +8,7 @@ router.get("/", async (req, res) => {
   try {
     const response = await db
       .promise()
-      .query("SELECT * FROM campuseats.order_items");
+      .query("SELECT * FROM order_items");
     res.status(200).json(response[0]);
   } catch (e) {
     res.status(400).json(e);
@@ -54,7 +54,7 @@ router.delete("/remove-item:id", async (req, res) => {
     const { id } = req.params;
     const response = await db
       .promise()
-      .query(`DELETE FROM campuseats.order_items WHERE id=${id}`);
+      .query(`DELETE FROM order_items WHERE id=${id}`);
     res.status(200).json({
       message: "Item deleted successfully",
     });

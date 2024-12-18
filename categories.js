@@ -6,7 +6,7 @@ const db=require('./db');
 router.get('/category-items', async(req, res) => {
   try{
     const {categoryName}=req.body;
-    const response=await db.promise().query(`SELECT * FROM campuseats.menu WHERE category = ${categoryName}`)
+    const response=await db.promise().query(`SELECT * FROM menu WHERE category = ${categoryName}`)
     res.status(200).json(response[0]);
 
   }catch(e){

@@ -6,7 +6,7 @@ const db = require("./db");
 //http://localhost:4000/menu/
 router.get("/", async (req, res) => {
   try {
-    const response = await db.promise().query(`SELECT * FROM campuseats.menu`);
+    const response = await db.promise().query(`SELECT * FROM menu`);
     res.status(200).json(response[0]);
   } catch (e) {
     res.status(400).json(e);
@@ -31,7 +31,7 @@ router.post("/post-menu", async (req, res) => {
     const result = await db
       .promise()
       .query(
-        `INSERT INTO campuseats.menu (vendor_id, name, description, price, category, image_url, availability, created_at) 
+        `INSERT INTO menu (vendor_id, name, description, price, category, image_url, availability, created_at) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           vendor_id,
@@ -56,7 +56,7 @@ router.put("/update-menu:id", async (req, res) => {
   const { name, description, price, category, image_url } = req.body;
   try {
     const query = `
-      UPDATE campuseats.menu 
+      UPDATE menu 
       SET 
         name = ?, 
         description = ?, 
@@ -86,7 +86,7 @@ router.delete("/delete-menu:id", async (req, res) => {
   try {
     const response = await db
       .promise()
-      .query(`DELETE FROM campuseats.menu WHERE id=${id}`);
+      .query(`DELETE FROM menu WHERE id=${id}`);
     res.status(200).json({ message: "Menu item deleted successfully" });
   } catch (e) {
     res.status(500).json({ error: "Failed to delete menu item" });

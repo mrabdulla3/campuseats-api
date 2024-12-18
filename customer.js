@@ -13,7 +13,7 @@ router.post("/signup-customer", async (req, res) => {
   try {
     const [existingCustomer] = await db
       .promise()
-      .query("SELECT * FROM campuseats.users WHERE email = ?", [email]);
+      .query("SELECT * FROM users WHERE email = ?", [email]);
     if (existingCustomer.length > 0) {
       return res.status(400).json({ error: "Customer already exists" });
     }
@@ -23,7 +23,7 @@ router.post("/signup-customer", async (req, res) => {
     await db
       .promise()
       .query(
-        "INSERT INTO campuseats.users (name, email, password, userType) VALUES (?, ?, ?, ?)",
+        "INSERT INTO users (name, email, password, userType) VALUES (?, ?, ?, ?)",
         [name, email, hashedPassword, userType]
       );
 
@@ -45,7 +45,7 @@ router.post("/login", async (req, res) => {
     // Check in customers table
     const [customer] = await db
       .promise()
-      .query("SELECT * FROM campuseats.users WHERE email = ?", [email]);
+      .query("SELECT * FROM users WHERE email = ?", [email]);
     if (customer.length > 0) {
       user = customer[0];
     }
@@ -92,7 +92,7 @@ router.post("/login", async (req, res) => {
 //http://localhost:4000/users/customer-profile
 router.get("/customer-profile", async (req, res) => {
   try {
-    const response = await db.promise().query("SELECT * FROM campuseats.users");
+    const response = await db.promise().query("SELECT * FROM users");
     res.status(200).json(response[0]);
   } catch (e) {
     res.status(404).json(e);
@@ -105,7 +105,7 @@ router.put("/customer-profile-update:id", async (req, res) => {
   const { name, password, phone, address } = req.body;
   try {
     const query = `
-      UPDATE campuseats.users 
+      UPDATE users 
       SET 
         name = ?, 
         password = ?, 
@@ -126,7 +126,7 @@ router.delete("/customer-profile-delete:id", async (req, res) => {
   try {
     const [response] = await db
       .promise()
-      .query(`DELETE FROM campuseats.users WHERE id=${id}`);
+      .query(`DELETE FROM users WHERE id=${id}`);
     if (response.affectedRows === 0) {
       return res.status(404).json({ message: "Customer profile not found" });
     }
