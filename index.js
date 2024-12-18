@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const db = require("./db");
 const app = express();
+require('dotenv').config();
 
 // Middleware
 app.use(cors());
@@ -25,7 +26,7 @@ app.use("/order_items", orderItemsRoute);
 app.use("/categories", categoriesRoute);
 
 // Start the server
-const PORT =4000;
+const PORT =process.env.PORT||3000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

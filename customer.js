@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const db = require("./db");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
-const JWT_SECRET = "campuseats@098";
+require('dotenv').config();
 
 //signup for customers
 //http://localhost:4000/users/signup-customer
@@ -69,7 +69,7 @@ router.post("/login", async (req, res) => {
 
     const token = jwt.sign(
       { id: user.id, email: user.email, userType: user.userType },
-      JWT_SECRET,
+      process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
@@ -147,7 +147,7 @@ router.get("/profile", (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
     const userType = decoded.userType;
 
