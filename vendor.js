@@ -11,7 +11,7 @@ router.post("/signup-vendor", async (req, res) => {
   try {
     const [existingCustomer] = await db
       .promise()
-      .query("SELECT * FROM campuseats.vendors WHERE email = ?", [email]);
+      .query("SELECT * FROM vendors WHERE email = ?", [email]);
     if (existingCustomer.length > 0) {
       return res.status(400).json({ error: "Vendor already exists" });
     }
@@ -21,7 +21,7 @@ router.post("/signup-vendor", async (req, res) => {
     await db
       .promise()
       .query(
-        "INSERT INTO campuseats.vendors (name, email, password, userType) VALUES (?, ?, ?, ?)",
+        "INSERT INTO vendors (name, email, password, userType) VALUES (?, ?, ?, ?)",
         [name, email, hashedPassword, userType]
       );
 
@@ -38,7 +38,7 @@ router.get("/vendor-profile/:id", async (req, res) => {
   try {
     const response = await db
       .promise()
-      .query(`SELECT * FROM campuseats.vendors WHERE id=${id}`);
+      .query("SELECT * FROM vendors");
     res.status(200).json(response[0]);
   } catch (e) {
     res.status(404).json(e);
@@ -51,7 +51,7 @@ router.put("/vendor-profile-update:id", async (req, res) => {
   const { name, password, phone, address } = req.body;
   try {
     const query = `
-        UPDATE campuseats.vendors 
+        UPDATE vendors 
         SET 
           name = ?, 
           password = ?, 
@@ -74,7 +74,7 @@ router.delete("/vendor-profile-delete/:id", async (req, res) => {
   try {
     const [response] = await db
       .promise()
-      .query("DELETE FROM campuseats.vendors WHERE id = ?", [id]);
+      .query("DELETE FROM vendors WHERE id = ?", [id]);
 
     if (response.affectedRows === 0) {
       return res.status(404).json({ message: "Vendor profile not found" });

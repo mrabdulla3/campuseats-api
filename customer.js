@@ -13,7 +13,7 @@ router.post("/signup-customer", async (req, res) => {
   try {
     const [existingCustomer] = await db
       .promise()
-      .query("SELECT * FROM campuseats.users WHERE email = ?", [email]);
+      .query("SELECT * FROM users WHERE email = ?", [email]);
     if (existingCustomer.length > 0) {
       return res.status(400).json({ error: "Customer already exists" });
     }
@@ -23,7 +23,7 @@ router.post("/signup-customer", async (req, res) => {
     await db
       .promise()
       .query(
-        "INSERT INTO campuseats.users (name, email, password, userType) VALUES (?, ?, ?, ?)",
+        "INSERT INTO users (name, email, password, userType) VALUES (?, ?, ?, ?)",
         [name, email, hashedPassword, userType]
       );
 
@@ -44,7 +44,7 @@ router.post("/login", async (req, res) => {
 
     const [customer] = await db
       .promise()
-      .query("SELECT * FROM campuseats.users WHERE email = ?", [email]);
+      .query("SELECT * FROM users WHERE email = ?", [email]);
     if (customer.length > 0) {
       user = customer[0];
     }
@@ -88,9 +88,7 @@ router.post("/login", async (req, res) => {
 router.get("/customer-profile/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const response = await db
-      .promise()
-      .query(`SELECT * FROM campuseats.users WHERE id=${id}`);
+    const response = await db.promise().query("SELECT * FROM users");
     res.status(200).json(response[0]);
   } catch (e) {
     res.status(404).json(e);
@@ -101,25 +99,15 @@ router.get("/customer-profile/:id", async (req, res) => {
 router.put("/profile-update", async (req, res) => {
   const { id, name, phone, address, currentPassword } = req.body;
   try {
-    const [userResult] = await db
-      .promise()
-      .query("SELECT password FROM campuseats.users WHERE id = ?", [id]);
-
-    if (userResult.length === 0) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const user = userResult[0];
-
-    const isPasswordValid = await bcrypt.compare(
-      currentPassword,
-      user.password
-    );
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Incorrect password" });
-    }
-
-    await db
+    const query = `
+      UPDATE users 
+      SET 
+        name = ?, 
+        password = ?, 
+        phone = ?, 
+        address = ?, 
+      WHERE id = ?`;
+    const [response] = await db
       .promise()
       .query(
         "UPDATE campuseats.users SET name = ?, phone = ?, address = ? WHERE id = ?",
@@ -139,7 +127,7 @@ router.delete("/customer-profile-delete:id", async (req, res) => {
   try {
     const [response] = await db
       .promise()
-      .query(`DELETE FROM campuseats.users WHERE id=${id}`);
+      .query(`DELETE FROM users WHERE id=${id}`);
     if (response.affectedRows === 0) {
       return res.status(404).json({ message: "Customer profile not found" });
     }

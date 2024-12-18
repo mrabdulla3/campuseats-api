@@ -1,9 +1,9 @@
  const mysql=require("mysql2");
  const db=mysql.createConnection({
-    host:'localhost',
-    password:'2(campuseats)@#',
-    user:'campuseats',
-    database:'campuseats'
+    host:'sql12.freesqldatabase.com',
+    password:'7hS1lbmBYp',
+    user:'sql12752618',
+    database:'sql12752618'
  });
 
  db.connect((err) => {
