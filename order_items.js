@@ -21,7 +21,7 @@ router.post("/add-to-cart", async (req, res) => {
   try {
     const [menuItem] = await db
       .promise()
-      .query("SELECT name,price FROM campuseats.menu WHERE id = ?", [menu_id]);
+      .query("SELECT name,price FROM menu WHERE id = ?", [menu_id]);
 
     if (menuItem.length === 0) {
       return res.status(404).json({ error: "Menu item not found" });
@@ -31,7 +31,7 @@ router.post("/add-to-cart", async (req, res) => {
     const total_price = price * quantity;
 
     const query = `
-      INSERT INTO campuseats.order_items (order_id,menu_id, quantity, price,item_name)
+      INSERT INTO order_items (order_id,menu_id, quantity, price,item_name)
       VALUES (?,?, ?, ?,?)
       ON DUPLICATE KEY UPDATE 
         quantity = quantity + VALUES(quantity),
@@ -62,7 +62,14 @@ router.delete("/remove-item/:id", async (req, res) => {
 
     const [result] = await db
       .promise()
-      .query(`DELETE FROM order_items WHERE id=${id}`);
+      .query("DELETE FROM order_items WHERE id = ?", [id]);
+
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ error: "Item not found or already deleted" });
+    }
+
     res.status(200).json({
       message: "Item deleted successfully",
     });

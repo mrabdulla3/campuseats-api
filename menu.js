@@ -28,10 +28,8 @@ router.post("/post-menu", async (req, res) => {
 
   try {
     // Use parameterized queries to prevent SQL injection
-    const result = await db
-      .promise()
-      .query(
-        `INSERT INTO menu (vendor_id, name, description, price, category, image_url, availability, created_at) 
+    const result = await db.promise().query(
+      `INSERT INTO menu (vendor_id, name, description, price, category, image_url, availability, created_at) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         vendor_id,

@@ -110,7 +110,7 @@ router.put("/profile-update", async (req, res) => {
     const [response] = await db
       .promise()
       .query(
-        "UPDATE campuseats.users SET name = ?, phone = ?, address = ? WHERE id = ?",
+        "UPDATE users SET name = ?, phone = ?, address = ? WHERE id = ?",
         [name, phone, address, id]
       );
 

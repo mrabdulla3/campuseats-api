@@ -38,7 +38,7 @@ router.get("/vendor-profile/:id", async (req, res) => {
   try {
     const response = await db
       .promise()
-      .query("SELECT * FROM vendors");
+      .query(`SELECT * FROM vendors WHERE id=${id}`);
     res.status(200).json(response[0]);
   } catch (e) {
     res.status(404).json(e);
