@@ -77,6 +77,7 @@ router.post("/login", async (req, res) => {
       message: "Login successful",
       token,
       userType: user.userType,
+      id: user.id,//add by Tushar
     });
   } catch (err) {
     console.error(err);
