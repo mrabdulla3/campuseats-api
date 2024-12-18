@@ -32,12 +32,13 @@ router.post("/signup-vendor", async (req, res) => {
   }
 });
 
-//http://localhost:4000/vendors/vendor-profile
-router.get("/vendor-profile", async (req, res) => {
+//http://localhost:4000/vendors/vendor-profile/1
+router.get("/vendor-profile/:id", async (req, res) => {
+  const { id } = req.params;
   try {
     const response = await db
       .promise()
-      .query("SELECT * FROM campuseats.vendors");
+      .query(`SELECT * FROM campuseats.vendors WHERE id=${id}`);
     res.status(200).json(response[0]);
   } catch (e) {
     res.status(404).json(e);

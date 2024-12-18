@@ -17,49 +17,65 @@ router.get("/", async (req, res) => {
 // add item in cart
 //http://localhost:4000/order_items/add-to-cart
 router.post("/add-to-cart", async (req, res) => {
-  const { order_id, menu_id, quantity, price } = req.body;
+  const { order_id, menu_id, quantity } = req.body; // Extract necessary data
   try {
     const [menuItem] = await db
       .promise()
-      .query("SELECT price FROM menu WHERE id = ?", [menu_id]);
+      .query("SELECT name,price FROM campuseats.menu WHERE id = ?", [menu_id]);
 
     if (menuItem.length === 0) {
       return res.status(404).json({ error: "Menu item not found" });
     }
 
-    const price = menuItem[0].price;
+    const { name, price } = menuItem[0];
     const total_price = price * quantity;
 
     const query = `
-         INSERT INTO cart (user_id, menu_id, quantity, price)
-         VALUES (?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE 
-           quantity = quantity + VALUES(quantity),
-           price = total_price + VALUES(price);
-       `;
+      INSERT INTO campuseats.order_items (order_id,menu_id, quantity, price,item_name)
+      VALUES (?,?, ?, ?,?)
+      ON DUPLICATE KEY UPDATE 
+        quantity = quantity + VALUES(quantity),
+        price = VALUES(quantity) * VALUES(price);
+    `;
 
-    await db.promise().query(query, [user_id, menu_id, quantity, price]);
+    await db
+      .promise()
+      .query(query, [order_id, menu_id, quantity, total_price, name]);
 
     res.status(200).json({
       message: "Item added to cart successfully",
     });
   } catch (e) {
-    res.status(400).json(e);
+    console.error("Error adding to cart:", e);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-//http://localhost:4000/order_items/remove-item:id
-router.delete("/remove-item:id", async (req, res) => {
+//http://localhost:4000/order_items/remove-item/id
+router.delete("/remove-item/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const response = await db
+
+    if (!id) {
+      return res.status(400).json({ error: "ID parameter is required" });
+    }
+
+    const [result] = await db
       .promise()
-      .query(`DELETE FROM campuseats.order_items WHERE id=${id}`);
+      .query("DELETE FROM campuseats.order_items WHERE id = ?", [id]);
+
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ error: "Item not found or already deleted" });
+    }
+
     res.status(200).json({
       message: "Item deleted successfully",
     });
   } catch (e) {
-    res.status(400).json(e);
+    console.error("Error deleting item:", e);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

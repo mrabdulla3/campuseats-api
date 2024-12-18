@@ -28,22 +28,20 @@ router.post("/post-menu", async (req, res) => {
 
   try {
     // Use parameterized queries to prevent SQL injection
-    const result = await db
-      .promise()
-      .query(
-        `INSERT INTO campuseats.menu (vendor_id, name, description, price, category, image_url, availability, created_at) 
+    const result = await db.promise().query(
+      `INSERT INTO campuseats.menu (vendor_id, name, description, price, category, image_url, availability, created_at) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          vendor_id,
-          name,
-          description,
-          price,
-          category,
-          image_url,
-          availability,
-          created_at,
-        ]
-      );
+      [
+        vendor_id,
+        name,
+        description,
+        price,
+        category,
+        image_url,
+        availability,
+        created_at,
+      ]
+    );
     res.status(201).json({ message: "Snack added successfully!" });
   } catch (e) {
     res.status(400).json({ error: e.message });
@@ -125,6 +123,5 @@ router.get("/search-menu", async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;

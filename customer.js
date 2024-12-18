@@ -42,7 +42,6 @@ router.post("/login", async (req, res) => {
   try {
     let user = null;
 
-    // Check in customers table
     const [customer] = await db
       .promise()
       .query("SELECT * FROM campuseats.users WHERE email = ?", [email]);
@@ -50,7 +49,6 @@ router.post("/login", async (req, res) => {
       user = customer[0];
     }
 
-    // Check in vendors table if not found in customers
     if (!user) {
       const [vendor] = await db
         .promise()
@@ -60,18 +58,15 @@ router.post("/login", async (req, res) => {
       }
     }
 
-    // If user not found
     if (!user) {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
-    // Compare passwords
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
-    // Generate JWT token
     const token = jwt.sign(
       { id: user.id, email: user.email, userType: user.userType },
       JWT_SECRET,
@@ -89,37 +84,55 @@ router.post("/login", async (req, res) => {
   }
 });
 
-//http://localhost:4000/users/customer-profile
-router.get("/customer-profile", async (req, res) => {
+//http://localhost:4000/users/customer-profile/1
+router.get("/customer-profile/:id", async (req, res) => {
+  const { id } = req.params;
   try {
-    const response = await db.promise().query("SELECT * FROM campuseats.users");
+    const response = await db
+      .promise()
+      .query(`SELECT * FROM campuseats.users WHERE id=${id}`);
     res.status(200).json(response[0]);
   } catch (e) {
     res.status(404).json(e);
   }
 });
 
-//http://localhost:4000/users/customer-profile-update:id=
-router.put("/customer-profile-update:id", async (req, res) => {
-  const { id } = req.params;
-  const { name, password, phone, address } = req.body;
+//http://localhost:4000/users/profile-update
+router.put("/profile-update", async (req, res) => {
+  const { id, name, phone, address, currentPassword } = req.body;
   try {
-    const query = `
-      UPDATE campuseats.users 
-      SET 
-        name = ?, 
-        password = ?, 
-        phone = ?, 
-        address = ?, 
-      WHERE id = ?`;
-    const [response] = await db
+    const [userResult] = await db
       .promise()
-      .query(query, [name, password, phone, address, id]);
-    res.status(200).json({ message: "Menu item updated successfully" });
+      .query("SELECT password FROM campuseats.users WHERE id = ?", [id]);
+
+    if (userResult.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const user = userResult[0];
+
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Incorrect password" });
+    }
+
+    await db
+      .promise()
+      .query(
+        "UPDATE campuseats.users SET name = ?, phone = ?, address = ? WHERE id = ?",
+        [name, phone, address, id]
+      );
+
+    res.status(200).json({ message: "Profile updated successfully" });
   } catch (e) {
-    res.status(404).json(e);
+    console.error("Error updating profile:", e.message);
+    res.status(500).json({ message: "Failed to update profile" });
   }
 });
+
 //http://localhost:4000/users/customer-profile-delete:id=
 router.delete("/customer-profile-delete:id", async (req, res) => {
   const { id } = req.params;
@@ -135,6 +148,64 @@ router.delete("/customer-profile-delete:id", async (req, res) => {
     });
   } catch (e) {
     res.status(404).json(e);
+  }
+});
+//http://localhost:4000/users/profile
+router.get("/profile", (req, res) => {
+  const token = req.headers["authorization"];
+
+  if (!token) {
+    return res.status(403).json({ message: "No token provided" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const userId = decoded.id;
+    const userType = decoded.userType;
+
+    let query = "";
+    if (userType === "vendor") {
+      query = "SELECT * FROM vendors WHERE id = ?";
+    } else if (userType === "user") {
+      query = "SELECT * FROM users WHERE id = ?";
+    } else {
+      return res.status(400).json({ message: "Invalid role in token" });
+    }
+
+    db.query(query, [userId], (err, results) => {
+      if (err) {
+        console.error("Database query error:", err);
+        return res.status(500).json({ message: "Server error" });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const user = results[0];
+
+      if (userType === "vendor") {
+        res.json({
+          id:userId,
+          userType: "vendor",
+          name: user.name,
+          email: user.email,
+          businessName: user.business_name || "N/A",
+          image: user.image || "https://via.placeholder.com/100",
+        });
+      } else {
+        res.json({
+          id:userId,
+          userType: "user",
+          name: user.name,
+          email: user.email,
+          image: user.image || "https://via.placeholder.com/100",
+        });
+      }
+    });
+  } catch (error) {
+    console.error("JWT verification error:", error.message);
+    return res.status(403).json({ message: "Invalid or expired token" });
   }
 });
 
