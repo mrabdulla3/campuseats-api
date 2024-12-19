@@ -36,12 +36,25 @@ router.post("/signup-customer", async (req, res) => {
 
 //For both user and vendors
 //http://localhost:4000/users/login
+// For user, vendors, and delivery boy login
+// POST http://localhost:4000/users/login
+
+
+// for delivery
+//curl -X POST http://localhost:4000/users/login -H "Content-Type: application/json" -d "{\"email\": \"john.doe@example.com\", \"password\": \"securepassword123\"}"
+
+
+// for user
+//curl -X POST http://localhost:4000/users/login -H "Content-Type: application/json" -d "{\"email\": \"tush@gmail.com\", \"password\": \"Tushar\"}"
+
+
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   try {
     let user = null;
 
+    // Check for user in the users table (customer)
     const [customer] = await db
       .promise()
       .query("SELECT * FROM users WHERE email = ?", [email]);
@@ -49,6 +62,7 @@ router.post("/login", async (req, res) => {
       user = customer[0];
     }
 
+    // Check for vendor in the vendors table
     if (!user) {
       const [vendor] = await db
         .promise()
@@ -58,32 +72,47 @@ router.post("/login", async (req, res) => {
       }
     }
 
+    // Check for delivery boy in the delivery table
+    if (!user) {
+      const [deliveryBoy] = await db
+        .promise()
+        .query("SELECT * FROM delivery WHERE email = ?", [email]);
+      if (deliveryBoy.length > 0) {
+        user = deliveryBoy[0];
+      }
+    }
+
+    // If no user found
     if (!user) {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
+    // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
+    // Generate JWT token
     const token = jwt.sign(
       { id: user.id, email: user.email, userType: user.userType },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
+    // Respond with success and user info
     res.status(200).json({
       message: "Login successful",
       token,
       userType: user.userType,
-      id: user.id,//add by Tushar
+      id: user.id, // add id to response
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 //http://localhost:4000/users/customer-profile/1
 router.get("/customer-profile/:id", async (req, res) => {
