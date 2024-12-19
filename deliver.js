@@ -181,7 +181,7 @@ router.get("/pending-orders", async (req, res) => {
 
 // Accept an order for delivery
 // POST http://localhost:4000/delivery/accept-order
-//curl -X POST http://localhost:4000/delivery/accept-order -H "Content-Type: application/json" -d '{"orderId":1,"deliveryBoyId":1}'
+//curl -X POST http://localhost:4000/delivery/accept-order -H "Content-Type: application/json" -d "{\"orderId\":1,\"deliveryBoyId\":2}"
 
 router.post("/accept-order", async (req, res) => {
   const { orderId, deliveryBoyId } = req.body; // Order ID and Delivery Boy ID from request
@@ -210,9 +210,9 @@ router.post("/accept-order", async (req, res) => {
   }
 });
 
-// Generate OTP and save it to the order
+// Generate OTP and save it to the order and return the otp
 //http://localhost:4000/delivery/generate-otp
-//curl -X POST http://localhost:4000/delivery/generate-otp -H "Content-Type: application/json" -d '{"orderId":1}'
+//curl -X POST http://localhost:4000/delivery/generate-otp -H "Content-Type: application/json" -d "{\"orderId\":1}"
 
 router.post("/generate-otp", async (req, res) => {
   const { orderId } = req.body;
@@ -239,7 +239,7 @@ router.post("/generate-otp", async (req, res) => {
 });
 //veryfy delivery
 //http://localhost:4000/delivery/verify-delivery
-//curl -X POST http://localhost:4000/delivery/verify-delivery -H "Content-Type: application/json" -d '{"orderId":1,"deliveryBoyId":1,"otp":123456}'
+//curl -X POST http://localhost:4000/delivery/verify-delivery -H "Content-Type: application/json" -d "{\"orderId\":1,\"deliveryBoyId\":2,\"otp\":910277}"
 
 router.post("/verify-delivery", async (req, res) => {
   const { orderId, deliveryBoyId, otp } = req.body;
@@ -248,7 +248,7 @@ router.post("/verify-delivery", async (req, res) => {
     // Fetch order details
     const [order] = await db
       .promise()
-      .query("SELECT * FROM orders WHERE id = ? AND delivery_boy_id = ?", [
+      .query("SELECT * FROM orders WHERE id = ? AND status = 'accepted' AND delivery_boy_id = ?", [
         orderId,
         deliveryBoyId,
       ]);
@@ -256,8 +256,7 @@ router.post("/verify-delivery", async (req, res) => {
     if (order.length === 0) {
       return res.status(400).json({ error: "Invalid order or delivery boy" });
     }
-
-    if (order[0].otp !== otp) {
+    if (order[0].delivery_otp != otp) {
       return res.status(400).json({ error: "Invalid OTP" });
     }
 
@@ -284,7 +283,7 @@ router.post("/verify-delivery", async (req, res) => {
 
 // API: Verify OTP for rejection and update the status and revenue
 //http://localhost:4000/delivery/reject-order
-//curl -X POST http://localhost:4000/delivery/reject-order -H "Content-Type: application/json" -d '{"orderId":1,"deliveryBoyId":1,"otp":123456}'
+//curl -X POST http://localhost:4000/delivery/reject-order -H "Content-Type: application/json" -d "{\"orderId\":1,\"deliveryBoyId\":2,\"otp\":910277}"
 
 router.post("/reject-order", async (req, res) => {
   const { orderId, deliveryBoyId, otp } = req.body;
@@ -293,7 +292,7 @@ router.post("/reject-order", async (req, res) => {
     // Fetch order details
     const [order] = await db
       .promise()
-      .query("SELECT * FROM orders WHERE id = ? AND delivery_boy_id = ?", [
+      .query("SELECT * FROM orders WHERE id = ? AND status = 'accepted' AND delivery_boy_id = ?", [
         orderId,
         deliveryBoyId,
       ]);
@@ -302,7 +301,7 @@ router.post("/reject-order", async (req, res) => {
       return res.status(400).json({ error: "Invalid order or delivery boy" });
     }
 
-    if (order[0].otp !== otp) {
+    if (order[0].delivery_otp != otp) {
       return res.status(400).json({ error: "Invalid OTP" });
     }
 
@@ -329,7 +328,7 @@ router.post("/reject-order", async (req, res) => {
 
 // API: Mark order as rejected due to no response from the user
 //http://localhost:4000/delivery/reject-order-no-response
-//curl -X POST http://localhost:4000/delivery/reject-order-no-response -H "Content-Type: application/json" -d '{"orderId":1,"deliveryBoyId":1}'
+//curl -X POST http://localhost:4000/delivery/reject-order-no-response -H "Content-Type: application/json" -d "{\"orderId\":1,\"deliveryBoyId\":1}"
 
 router.post("/reject-order-no-response", async (req, res) => {
   const { orderId, deliveryBoyId } = req.body;
@@ -338,7 +337,7 @@ router.post("/reject-order-no-response", async (req, res) => {
     // Check if the order exists and belongs to the delivery boy
     const [order] = await db
       .promise()
-      .query("SELECT * FROM orders WHERE id = ? AND delivery_boy_id = ?", [
+      .query("SELECT * FROM orders WHERE id = ? AND status = 'accepted' AND delivery_boy_id = ?", [
         orderId,
         deliveryBoyId,
       ]);
@@ -404,7 +403,7 @@ router.get("/delivery-details", async (req, res) => {
     const [deliveryDetails] = await db
       .promise()
       .query(
-        `SELECT revenue, total_deliveries
+        `SELECT revenue, total_delivery
          FROM delivery 
          WHERE id = ?`,
         [deliveryBoyId]
@@ -447,7 +446,7 @@ router.get("/delivery-details", async (req, res) => {
     // Combine the results and return as response
     const result = {
       revenue: deliveryDetails[0].revenue,
-      totalDeliveries: deliveryDetails[0].total_deliveries,
+      totalDeliveries: deliveryDetails[0].total_delivery,
       acceptedOrderCount: acceptedOrders[0].accepted_order_count,
       pendingOrderCount: pendingOrders[0].pending_order_count,
       rejectedOrderCount: rejectedOrders[0].rejected_order_count,
