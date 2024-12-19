@@ -16,7 +16,7 @@ const menuRoute = require("./menu");
 const ordersRoute = require("./order");
 const orderItemsRoute = require("./order_items");
 const categoriesRoute = require("./categories");
-const deliverRoute = require("./deliver"); // Import the new deliver.js route file by tushar 
+const deliverRoute = require("./deliver"); 
 
 // Use routes
 app.use("/users", usersRoute);
@@ -25,7 +25,7 @@ app.use("/menu", menuRoute);
 app.use("/orders", ordersRoute);
 app.use("/order_items", orderItemsRoute);
 app.use("/categories", categoriesRoute);
-app.use("/delivery", deliverRoute); // Use /delivery route for all delivery-related actions by tushar 
+app.use("/delivery", deliverRoute); 
 
 // Start the server
 const PORT = process.env.PORT || 3000;

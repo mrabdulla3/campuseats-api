@@ -127,22 +127,37 @@ router.get("/customer-profile/:id", async (req, res) => {
 
 //http://localhost:4000/users/profile-update
 router.put("/profile-update", async (req, res) => {
-  const { id, name, phone, address, currentPassword } = req.body;
+  const { id, name, phone, address, currentPassword, userType } = req.body;
+
+  if (!id || !userType) {
+    return res.status(400).json({ message: "User ID and user type are required" });
+  }
+
   try {
-    const query = `
-      UPDATE users 
-      SET 
-        name = ?, 
-        password = ?, 
-        phone = ?, 
-        address = ?, 
-      WHERE id = ?`;
-    const [response] = await db
-      .promise()
-      .query(
-        "UPDATE users SET name = ?, phone = ?, address = ? WHERE id = ?",
-        [name, phone, address, id]
-      );
+    let query = "";
+    let params = [];
+
+    if (userType === "user") {
+      query = `
+        UPDATE users 
+        SET name = ?, phone = ?, address = ? 
+        WHERE id = ?`;
+      params = [name, phone, address, id];
+    } else if (userType === "vendor") {
+      query = `
+        UPDATE vendors 
+        SET name = ?, phone = ?, address = ? 
+        WHERE id = ?`;
+      params = [name, phone, address, id];
+    } else {
+      return res.status(400).json({ message: "Invalid user type" });
+    }
+
+    const [response] = await db.promise().query(query, params);
+
+    if (response.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     res.status(200).json({ message: "Profile updated successfully" });
   } catch (e) {
@@ -150,6 +165,7 @@ router.put("/profile-update", async (req, res) => {
     res.status(500).json({ message: "Failed to update profile" });
   }
 });
+
 
 //http://localhost:4000/users/customer-profile-delete:id=
 router.delete("/customer-profile-delete:id", async (req, res) => {
@@ -168,6 +184,7 @@ router.delete("/customer-profile-delete:id", async (req, res) => {
     res.status(404).json(e);
   }
 });
+
 //http://localhost:4000/users/profile
 router.get("/profile", (req, res) => {
   const token = req.headers["authorization"];
@@ -208,6 +225,8 @@ router.get("/profile", (req, res) => {
           userType: "vendor",
           name: user.name,
           email: user.email,
+          phone:user.phone,
+          address:user.address,
           businessName: user.business_name || "N/A",
           image: user.image || "https://via.placeholder.com/100",
         });
@@ -217,6 +236,8 @@ router.get("/profile", (req, res) => {
           userType: "user",
           name: user.name,
           email: user.email,
+          phone:user.phone,
+          address:user.address,
           image: user.image || "https://via.placeholder.com/100",
         });
       }
