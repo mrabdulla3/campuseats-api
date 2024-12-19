@@ -15,9 +15,11 @@ router.get("/", async (req, res) => {
 //Restaurent Menu
 //http://localhost:4000/menu/vendorId
 router.get("/:id", async (req, res) => {
-  const {id}=req.params;
+  const { id } = req.params;
   try {
-    const response = await db.promise().query(`SELECT *FROM menu WHERE vendor_id=${id}`);
+    const response = await db
+      .promise()
+      .query(`SELECT *FROM menu WHERE vendor_id=${id}`);
     res.status(200).json(response[0]);
   } catch (e) {
     res.status(400).json(e);
@@ -62,7 +64,8 @@ router.post("/post-menu", async (req, res) => {
 ////http://localhost:4000/menu/update-menu/:id=1
 router.put("/update-menu/:id", async (req, res) => {
   const { id } = req.params;
-  const { name, description, price, category, image_url, availability } = req.body;
+  const { name, description, price, category, image_url, availability } =
+    req.body;
 
   try {
     const query = `
@@ -109,36 +112,28 @@ router.delete("/delete-menu/:id", async (req, res) => {
 });
 
 // Search API for menu items
-//http://localhost:4000/menu/search-menu?name=pizza
-////http://localhost:4000/menu/search-menu?category=snacks
-router.get("/search-menu", async (req, res) => {
-  const { name, category } = req.query;
+//http://localhost:4000/menu/search-menu/pizza
+router.get("/search-menu/:query", (req, res) => {
+  const {query} = req.params;
 
-  try {
-    let query = "SELECT * FROM menu WHERE 1=1"; // Start with a true condition
-    const params = [];
-
-    if (name) {
-      query += " AND name LIKE ?";
-      params.push(`%${name}%`);
-    }
-
-    if (category) {
-      query += " AND category = ?";
-      params.push(category);
-    }
-
-    const [rows] = await db.promise().query(query, params);
-
-    res.status(200).json({
-      message: "Menu items fetched successfully",
-      data: rows,
-    });
-  } catch (e) {
-    res.status(500).json({
-      error: "Failed to fetch menu items",
-    });
+  if (!query) {
+    return res.status(400).json({ error: "Query parameter is required." });
   }
+
+  const sql = `
+    SELECT * 
+    FROM menu 
+    WHERE name LIKE ? OR category LIKE ?
+  `;
+  const values = [`%${query}%`, `%${query}%`];
+
+  db.query(sql, values, (err, results) => {
+    if (err) {
+      console.error("Database query error:", err);
+      return res.status(500).json({ error: "Internal Server Error." });
+    }
+    res.json(results);
+  });
 });
 
 module.exports = router;
