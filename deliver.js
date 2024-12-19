@@ -142,7 +142,7 @@ router.delete("/delete-delivery-boy/:id", async (req, res) => {
 
 // Get all pending orders for delivery boys
 // GET http://localhost:4000/delivery/pending-orders?deliveryBoyId=Id
-//curl -X GET "http://localhost:4000/delivery/pending-orders?deliveryBoyId=1"
+//curl -X GET "http://localhost:4000/delivery/pending-orders?deliveryBoyId=2"
 
 
 router.get("/pending-orders", async (req, res) => {
@@ -328,7 +328,7 @@ router.post("/reject-order", async (req, res) => {
 
 // API: Mark order as rejected due to no response from the user
 //http://localhost:4000/delivery/reject-order-no-response
-//curl -X POST http://localhost:4000/delivery/reject-order-no-response -H "Content-Type: application/json" -d "{\"orderId\":1,\"deliveryBoyId\":1}"
+//curl -X POST http://localhost:4000/delivery/reject-order-no-response -H "Content-Type: application/json" -d "{\"orderId\":1,\"deliveryBoyId\":2}"
 
 router.post("/reject-order-no-response", async (req, res) => {
   const { orderId, deliveryBoyId } = req.body;
@@ -394,7 +394,7 @@ router.get("/get-otp", async (req, res) => {
 
 // API: Get revenue, total deliveries, pending, and rejected orders for a specific delivery boy
 //http://localhost:4000/delivery/delivery-details?deliveryBoyId=1
-//curl -X GET "http://localhost:4000/delivery/delivery-details?deliveryBoyId=1"
+//curl -X GET "http://localhost:4000/delivery/delivery-details?deliveryBoyId=2"
 router.get("/delivery-details", async (req, res) => {
   const { deliveryBoyId } = req.query;  // Get deliveryBoyId from the query parameters
 
