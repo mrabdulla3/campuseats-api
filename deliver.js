@@ -140,5 +140,61 @@ router.delete("/delete-delivery-boy/:id", async (req, res) => {
   }
 });
 
+// Get all pending orders for delivery boys
+// GET http://localhost:4000/delivery/pending-orders
+//curl -X GET "http://localhost:4000/delivery/pending-orders?deliveryBoyId=1"
+
+router.get("/pending-orders", async (req, res) => {
+  const { deliveryBoyId } = req.query; // Pass the delivery boy's ID as a query parameter
+
+  try {
+    // Query to fetch pending orders
+    const [orders] = await db.promise().query(
+      `SELECT * FROM orders WHERE status = 'pending' AND (delivery_boy_id IS NULL OR delivery_boy_id = ?)`,
+      [deliveryBoyId]
+    );
+
+    if (orders.length === 0) {
+      return res.status(404).json({ message: "No pending orders found" });
+    }
+
+    res.status(200).json({ pendingOrders: orders });
+  } catch (err) {
+    console.error("Error fetching pending orders:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Accept an order for delivery
+// POST http://localhost:4000/delivery/accept-order
+//curl -X POST http://localhost:4000/delivery/accept-order -H "Content-Type: application/json" -d '{"orderId":1,"deliveryBoyId":1}'
+
+router.post("/accept-order", async (req, res) => {
+  const { orderId, deliveryBoyId } = req.body; // Order ID and Delivery Boy ID from request
+
+  try {
+    // Check if the order exists and is pending
+    const [order] = await db.promise().query(
+      `SELECT * FROM orders WHERE id = ? AND status = 'pending' AND (delivery_boy_id IS NULL OR delivery_boy_id = ?)`,
+      [orderId, deliveryBoyId]
+    );
+
+    if (order.length === 0) {
+      return res.status(404).json({ message: "Order not found or already accepted" });
+    }
+
+    // Update the order with the delivery boy's ID
+    await db.promise().query(
+      `UPDATE orders SET delivery_boy_id = ?, status = 'accepted' WHERE id = ?`,
+      [deliveryBoyId, orderId]
+    );
+
+    res.status(200).json({ message: "Order accepted successfully" });
+  } catch (err) {
+    console.error("Error accepting order:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 
 module.exports = router;
