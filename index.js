@@ -16,7 +16,7 @@ const menuRoute = require("./menu");
 const ordersRoute = require("./order");
 const orderItemsRoute = require("./order_items");
 const categoriesRoute = require("./categories");
-const deliverRoute = require("./deliver"); // Import the new deliver.js route file by tushar 
+const deliverRoute = require("./deliver"); 
 
 // Use routes
 app.use("/users", usersRoute);
