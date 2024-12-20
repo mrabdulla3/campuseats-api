@@ -38,8 +38,8 @@ router.post("/signup-delivery-boy", async (req, res) => {
     await db
       .promise()
       .query(
-        "INSERT INTO delivery_boy (id, delivery_latitude, delivery_longitude) VALUES (?, ?, ?)",
-        [deliveryBoyId, null, null]
+        "INSERT INTO delivery_boy (id) VALUES (?)",
+        [deliveryBoyId]
       );
 
     res.status(201).json({ message: "Delivery boy registered successfully" });
